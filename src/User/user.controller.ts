@@ -2,7 +2,7 @@ import { CreateUserDTO } from './dto/CreateUser.dto';
 import { GetUserDTO } from './dto/GetUser.dto';
 import { UpdateUserDTO } from './dto/UpdateUser.dto';
 import { UserService } from './user.service';
-import { Body, Controller, Get, Inject, Param, Post, Put } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Inject, Param, Post, Put } from "@nestjs/common";
 
 @Controller('/users')
 export class UserController {
@@ -14,7 +14,7 @@ export class UserController {
     const userCreated = await this.userService.createUser(userData)
 
     return { 
-      user: new GetUserDTO(userCreated.id, userCreated.name),
+      user: new GetUserDTO(userCreated.id, userCreated.name, userCreated.password),
       message: 'User created with success!'
     };
   };
@@ -29,6 +29,8 @@ export class UserController {
     return { user: await this.userService.updateUser(id, newData), message: 'user updated with success!' };
   }
 
-  
-
+  @Delete('/:id')
+  async deleteUsers (@Param('id') id: string) {
+    return { user: await this.userService.deleteUser(id), message: 'user deleted with success!' };
+  } 
 }

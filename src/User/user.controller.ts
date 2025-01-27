@@ -24,6 +24,11 @@ export class UserController {
     return await this.userService.getUsers();
   }
 
+  @Get('/:id')
+  async findOne(@Param('id') id: string) {
+    return await this.userService.getOne(id)
+  }
+
   @Put('/:id')
   async updateUsers (@Param('id') id: string, @Body() newData: UpdateUserDTO) {
     return { user: await this.userService.updateUser(id, newData), message: 'user updated with success!' };

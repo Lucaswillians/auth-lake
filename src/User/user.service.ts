@@ -4,7 +4,7 @@ import { Repository } from "typeorm";
 import { CreateUserDTO } from "./dto/CreateUser.dto";
 import { GetUserDTO } from "./dto/GetUser.dto";
 import { UpdateUserDTO } from "./dto/UpdateUser.dto";
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { AuthService } from "./auth/auth.service";
 
 @Injectable()
@@ -32,6 +32,14 @@ export class UserService {
     const usersList = savedUsers.map((user) => new GetUserDTO(user.id, user.name, user.password));
 
     return usersList;
+  }
+
+  async getOne (id: string) {
+    const user = await this.userRepository.findOne({ where: { id } })
+
+    if (!user) throw new NotFoundException(`User with ID ${id} not found`);
+
+    return new GetUserDTO(user.id, user.name, user.password)
   }
 
   async updateUser (id: string, newData: UpdateUserDTO) {

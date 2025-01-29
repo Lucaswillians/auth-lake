@@ -4,7 +4,7 @@ import { Repository } from "typeorm";
 import { CreateUserDTO } from "./dto/CreateUser.dto";
 import { GetUserDTO } from "./dto/GetUser.dto";
 import { UpdateUserDTO } from "./dto/UpdateUser.dto";
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException, forwardRef } from "@nestjs/common";
 import { AuthService } from "./auth/auth.service";
 
 @Injectable()
@@ -12,7 +12,7 @@ export class UserService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
-    private readonly authService: AuthService
+    @Inject(forwardRef(() => AuthService)) private authService: AuthService, 
   ) {}
 
   async createUser (userData: CreateUserDTO) {
@@ -34,10 +34,10 @@ export class UserService {
     return usersList;
   }
 
-  async getOne (id: string) {
-    const user = await this.userRepository.findOne({ where: { id } })
+  async getOne (name: string) {
+    const user = await this.userRepository.findOne({ where: { name } })
 
-    if (!user) throw new NotFoundException(`User with ID ${id} not found`);
+    if (!user) throw new NotFoundException(`User with ID ${name} not found`);
 
     return new GetUserDTO(user.id, user.name, user.password)
   }

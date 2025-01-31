@@ -1,14 +1,17 @@
 import { Inject, Injectable, UnauthorizedException, forwardRef } from "@nestjs/common";
 import * as bcrypt from 'bcrypt';
 import { UserService } from "../user.service";
+import { JwtService } from "@nestjs/jwt";
 
 @Injectable()
 export class AuthService {
   private readonly saltRounds: number = 10;
+  
   @Inject(forwardRef(() => UserService))
   private readonly userService: UserService;
-
-
+  
+  @Inject()
+  private readonly jwtService: JwtService;
 
   async hashPassword(password: string): Promise<string> {
     return bcrypt.hash(password, this.saltRounds);
@@ -19,21 +22,15 @@ export class AuthService {
   }
 
   async signIn(username: string, password: string) {
-    // 1. Busca o usuário pelo nome de usuário
-    const user = await this.userService.getOne(username);
-
-    if (!user) {
-      throw new UnauthorizedException('User not found!');
-    }
-
-    // 2. Compara a senha fornecida com a senha armazenada no banco de dados
+    const user = await this.userService.getOneJWTverify(username);
     const passwordMatch = await this.comparePasswords(password, user.password);
 
-    if (!passwordMatch) {
-      throw new UnauthorizedException('Invalid credentials!');
-    }
+    if (!user) throw new UnauthorizedException('User not found!');
 
-    // 3. Retorna uma resposta de sucesso (você pode incluir um token aqui, se necessário)
-    return { message: 'Login successful', user: { id: user.id, name: user.name } };
+    if (!passwordMatch) throw new UnauthorizedException('Invalid credentials!');
+
+    const payload = { sub: user.id, username: user.name};
+
+    return { message: 'Login successful', access_token: await this.jwtService.signAsync(payload) };
   }
 }

@@ -4,8 +4,9 @@ import { Repository } from "typeorm";
 import { CreateUserDTO } from "./dto/CreateUser.dto";
 import { GetUserDTO } from "./dto/GetUser.dto";
 import { UpdateUserDTO } from "./dto/UpdateUser.dto";
-import { Inject, Injectable, NotFoundException, forwardRef } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException, UseGuards, forwardRef } from "@nestjs/common";
 import { AuthService } from "./auth/auth.service";
+import { AuthGuard } from "./auth/auth.guard";
 
 @Injectable()
 export class UserService {
@@ -34,13 +35,21 @@ export class UserService {
     return usersList;
   }
 
-  async getOne (name: string) {
-    const user = await this.userRepository.findOne({ where: { name } })
+  async getOneJWTverify (name: string) {
+    const username = await this.userRepository.findOne({ where: { name } })
 
-    if (!user) throw new NotFoundException(`User with ID ${name} not found`);
+    if (!username) throw new NotFoundException(`User ${name} not found`);
 
-    return new GetUserDTO(user.id, user.name, user.password)
+    return new GetUserDTO(username.id, username.name, username.password)
   }
+
+  async getOne (id: string) {
+    const userId = await this.userRepository.findOne({ where: { id } });
+
+    if (!userId) throw new NotFoundException(`User with id ${id} not found`);
+
+    return new GetUserDTO(userId.id, userId.name, userId.password)
+   }
 
   async updateUser (id: string, newData: UpdateUserDTO) {
     return await this.userRepository.update(id, newData);
